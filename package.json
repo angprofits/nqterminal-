@@ -1,0 +1,1 @@
+{"name": "nq-terminal", "version": "1.2.0", "private": true, "scripts": {"start": "node server.js", "test": "node test.js", "replay": "node replay.js"}, "engines": {"node": ">=22"}}

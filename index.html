@@ -1,0 +1,143 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NQ Terminal</title>
+<style>
+:root{--bg:#0b0d10;--p:#12161b;--b:#232a33;--t:#d5dbe3;--m:#7d8896;--g:#2ecc8f;--r:#ff5c6c;--a:#e8b04a;--bl:#5aa2ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font:12px/1.4 ui-sans-serif,system-ui,sans-serif}
+.num{font-family:ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+#top{display:flex;gap:14px;align-items:center;padding:6px 12px;border-bottom:1px solid var(--b);background:var(--p);flex-wrap:wrap}
+#top b{letter-spacing:.08em}.pill{padding:1px 7px;border:1px solid var(--b);border-radius:3px;color:var(--m)}
+.ok{color:var(--g);border-color:#1d5c45}.bad{color:var(--r);border-color:#6b2a31}.warn{color:var(--a);border-color:#6b5320}
+main{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-auto-rows:8px;gap:8px;padding:8px;align-content:start;grid-auto-flow:dense}.lc,.col{display:contents}
+@media(max-width:900px){section{grid-column:1/-1!important}}
+section{background:var(--p);border:1px solid var(--b);border-radius:4px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+h2{margin:0;padding:5px 9px;font-size:11px;letter-spacing:.1em;color:var(--m);border-bottom:1px solid var(--b);display:flex;justify-content:space-between;gap:8px;font-weight:600}
+.sc{overflow:auto;flex:1}
+table{width:100%;border-collapse:collapse}th{position:sticky;top:0;background:var(--p);color:var(--m);font-weight:600;text-align:right;padding:4px 7px;cursor:pointer;border-bottom:1px solid var(--b);user-select:none}
+th:first-child,td:first-child{text-align:left}td{text-align:right;padding:3px 7px;border-bottom:1px solid #181d23}
+tr.r:hover{background:#171c23;cursor:pointer}tr.sel{background:#1a2230}.up{color:var(--g)}.dn{color:var(--r)}.mu{color:var(--m)}
+.fl{animation:f .6s}@keyframes f{from{background:#2a3340}}
+.sig{padding:7px 9px;border-bottom:1px solid #181d23;border-left:3px solid var(--b);cursor:pointer}.sig.up{border-left-color:var(--g)}.sig.down{border-left-color:var(--r)}.sig.info{border-left-color:var(--bl)}
+.sig .d{display:none;margin-top:5px;color:var(--m)}.sig.open .d{display:block}.sig li{margin:1px 0}
+.n{padding:5px 9px;border-bottom:1px solid #181d23}.n a{color:var(--t);text-decoration:none}.n a:hover{color:var(--bl)}.tag{font-size:10px;padding:0 5px;border:1px solid var(--b);border-radius:3px;color:var(--m);margin-right:4px}
+.tk{color:var(--bl)}input,select{background:#0b0d10;color:var(--t);border:1px solid var(--b);border-radius:3px;padding:2px 5px;font-size:11px}
+.bar{display:grid;grid-template-columns:36px 1fr 90px;gap:6px;align-items:center;padding:2px 9px}.bar i{height:6px;background:linear-gradient(90deg,var(--g) var(--u),var(--r) var(--u) calc(var(--u) + var(--d)),#3a434f 0);border-radius:2px}
+kbd{border:1px solid var(--b);padding:0 4px;border-radius:3px;color:var(--m)}
+button{background:#1a2230;color:var(--t);border:1px solid var(--b);border-radius:3px;padding:2px 8px;cursor:pointer}.pc a,.x,[data-mv]{cursor:pointer;color:var(--m);padding:0 4px}.pc a:hover,.x:hover{color:var(--t)}section{position:relative}h2{cursor:grab;user-select:none;touch-action:none}h2 input,h2 select,h2 a{cursor:auto}.rz{position:absolute;right:0;bottom:0;width:18px;height:18px;cursor:nwse-resize;background:linear-gradient(135deg,transparent 52%,var(--m) 52%);opacity:.55;touch-action:none;z-index:2}.rz:hover{opacity:1}section.drag{opacity:.45;outline:1px dashed var(--bl)}section.over{outline:2px solid var(--bl)}#mega h2{align-items:center}.sub{padding:4px 9px;color:var(--m);font-size:10px;letter-spacing:.08em;border-top:1px solid var(--b)}ul.w{margin:2px 0 4px;padding:0 9px 0 22px;list-style:none}ul.w li{margin:1px 0}
+</style></head><body>
+<div id="top"><b>NQ TERMINAL</b><button id="lb">⚙ Layout</button><button id="bell">🔔 off</button><span class="mu">drag a panel header to move it · drag the ◢ corner to resize</span><span id="sess" class="pill">—</span><span id="clock" class="pill num"></span><span id="fy" class="pill">quotes…</span><span id="fn" class="pill">news…</span><span id="fr" class="pill">fresh —</span><span id="nq" class="pill">NQ…</span><span id="fo" class="pill">official…</span><span id="fw" class="pill">push…</span><span class="mu" style="margin-left:auto">Keys: <kbd>/</kbd> filter · <kbd>N</kbd> news only selected · <kbd>Esc</kbd> clear</span></div>
+<div id="dlg" style="display:none;position:fixed;inset:0;background:#000a;z-index:9"><div id="dlgb" style="max-width:560px;margin:40px auto;background:var(--p);border:1px solid var(--b);border-radius:4px;padding:12px"></div></div>
+<main>
+<div class="lc"><section id="mega"><h2><span>MEGA-CAP DRIVERS <span class="mu">excl. AAPL · NQ-weighted</span></span><span id="mgh"></span></h2><div class="sc" id="mg"></div></section>
+<section id="p-watch"><h2><span>WATCHLIST <span id="wn" class="mu"></span></span><span><input id="addt" placeholder="+ ticker ⏎" size="9"> <input id="flt" placeholder="filter…" size="9"></span></h2><div class="sc"><table><thead><tr id="hd"></tr></thead><tbody id="tb"></tbody></table></div></section></div>
+<div class="col">
+<section id="p-corr"><h2>GOLD · OIL · MACRO vs NQ <span class="mu">1-min return correlation</span></h2><div class="sc" id="cr"></div></section>
+<section id="p-cal"><h2>CALENDAR &amp; EVENTS <span class="mu">Skopje time</span></h2><div class="sc"><div id="cl"></div><div class="n"><input id="addev" placeholder="2026-10-28 16:05 | EARN:MSFT  (ET)" size="32"></div></div></section>
+<section id="p-jour"><h2>SIGNAL JOURNAL <span class="mu">what NQ did after each alert</span></h2><div class="sc" id="jr"></div></section>
+<section id="p-sync"><h2>SYNCHRONIZATION (fresh symbols only)</h2><div id="sync" class="sc" style="padding:4px 0"></div></section>
+<section id="p-sig"><h2><span>MARKET SIGNALS</span><span id="sigc" class="mu"></span></h2><div class="sc" id="sg"><div class="n mu">No signals yet. Needs ≥10 fresh symbols and a few minutes of history.</div></div></section>
+<section id="p-imp"><h2>NEWS IMPACT <span class="mu">observed move since detection · not causation</span></h2><div class="sc" id="im"><div class="n mu">None yet</div></div></section>
+<section id="p-news"><h2><span id="nh">NEWS &amp; STATEMENTS</span><select id="nc"><option value="">All</option></select></h2><div class="sc" id="nw"><div class="n mu">Loading…</div></div></section>
+</div></main>
+<script>
+const $=id=>document.getElementById(id);let D=null,sort={k:'tk',d:1},sel=null,filt='',nsel=false,prev={},open=new Set();
+const COLS=[['tk','Ticker'],['price','Last'],['chg','Chg'],['pct','Chg%'],['extPct','Ext% vs reg'],['r10','10s'],['r60','1m'],['r300','5m'],['vol','Volume'],['state','Range state'],['age','Age'],['status','Status']];
+$('hd').innerHTML=COLS.map(c=>`<th data-k="${c[0]}">${c[1]}</th>`).join('');
+$('hd').onclick=e=>{const k=e.target.dataset.k;if(!k)return;sort={k,d:sort.k===k?-sort.d:-1};if(k==='tk')sort.d=1;draw()};
+$('flt').oninput=e=>{filt=e.target.value.toUpperCase();draw()};
+addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement.id!=='flt'){e.preventDefault();$('flt').focus()}else if(e.key==='Escape'){sel=null;filt='';$('flt').value='';nsel=false;draw()}else if((e.key==='n'||e.key==='N')&&document.activeElement.tagName!=='INPUT'){nsel=!nsel;draw()}});
+$('nc').onchange=draw;
+const f=(v,d=2)=>v==null?'—':v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const p=(v,d=2)=>v==null?'—':(v>=0?'+':'')+(v*100).toFixed(d)+'%';
+const cl=v=>v==null||Math.abs(v)<1e-9?'mu':v>0?'up':'dn';
+const T=t=>new Date(t).toLocaleTimeString('en-GB',{timeZone:'Europe/Skopje'});
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+setInterval(()=>$('clock').textContent=new Date().toLocaleString('en-GB',{timeZone:'Europe/Skopje'})+' Skopje',1000);
+function draw(){if(!D)return;try{localStorage.q=JSON.stringify({sort,filt})}catch{}const a=D.analysis,fd=D.feed;
+ $('wn').textContent='· '+Object.keys(D.syms||{}).length;$('sess').textContent=a.session||'—';$('sess').className='pill '+(a.session==='REGULAR'?'ok':a.session?.startsWith('CLOSED')?'warn':'bl');
+ const st=(el,n,o)=>{const age=o.last?Math.round((D.now-o.last)/1000):null;el.textContent=n+(o.ok?` OK ${age}s ago`:` DOWN${o.err?': '+o.err:''}`);el.className='pill '+(o.ok?(age>30?'warn':'ok'):'bad')};
+ st($('fy'),'Yahoo quotes (unofficial, not consolidated-verified)',fd.yahoo);st($('fn'),'News RSS (secondary)',fd.news);st($('fo'),'Official (WH/Fed/SEC)',fd.official);st($('fw'),'Push stream (Finnhub)',fd.ws);$('nq').innerHTML=a.nq?`NQ=F ${f(a.nq.price)} <span class="${cl(a.nq.pct)}">${p(a.nq.pct)}</span> · ${Math.round(a.nq.age/1000)}s · Yahoo, delay unverified`:'<span class="warn">NQ=F unavailable</span>';
+ $('fr').textContent=`fresh ${a.fresh??0}/${Object.keys(D.syms||{}).length} · poll ${fd.yahoo.lat??'—'}ms`;
+ // table
+ let rows=Object.entries(a.rows||{}).map(([tk,r])=>({tk,...r,r10:r.returns?.['10s'],r60:r.returns?.['1m'],r300:r.returns?.['5m']}));
+ rows=rows.filter(r=>!filt||r.tk.includes(filt));
+ rows.sort((x,y)=>{const A=x[sort.k],B=y[sort.k];return(typeof A==='string'?A.localeCompare(B||''):(A??-1e18)-(B??-1e18))*sort.d});
+ $('tb').innerHTML=rows.map(r=>{const c=r.status==='unavailable';return`<tr class="r ${sel===r.tk?'sel':''}" data-t="${r.tk}"><td><b>${r.tk}</b></td>`+(c?`<td colspan="11" class="mu">unavailable</td>`:
+ `<td class="num ${prev[r.tk]!==r.price?'fl':''}">${f(r.price)}</td><td class="num ${cl(r.chg)}">${f(r.chg)}</td><td class="num ${cl(r.pct)}">${p(r.pct)}</td><td class="num ${cl(r.extPct)}">${a.session==='REGULAR'?'—':p(r.extPct)}</td><td class="num ${cl(r.r10)}">${p(r.r10,3)}</td><td class="num ${cl(r.r60)}">${p(r.r60,3)}</td><td class="num ${cl(r.r300)}">${p(r.r300,3)}</td><td class="num mu">${r.vol?(r.vol/1e6).toFixed(1)+'M':'—'}</td><td>${r.state}</td><td class="num mu">${Math.round(r.age/1000)}s</td><td class="${r.status==='live'?'up':'warn'}">${r.status.toUpperCase()}</td><td><a class="x" data-rm="${r.tk}">×</a></td>`)+'</tr>';}).join('');
+ rows.forEach(r=>prev[r.tk]=r.price);
+ $('tb').onclick=e=>{const rm=e.target.dataset.rm;if(rm){wpost({remove:[rm]});return}const t=e.target.closest('tr')?.dataset.t;sel=sel===t?null:t;draw()};
+ // sync
+ $('sync').innerHTML=Object.entries(a.sync||{}).map(([k,s])=>{const n=s.up+s.dn+s.flat||1;return`<div class="bar"><span class="mu">${k}</span><i style="--u:${s.up/n*100}%;--d:${s.dn/n*100}%"></i><span class="num">${s.n?`${s.up}↑ ${s.dn}↓ ${s.flat}– `+(s.na?`<span class="warn">${s.na}n/a</span>`:''):'<span class="mu">no data</span>'}</span></div>`+(s.n?`<div class="bar" style="margin-top:-3px"><span></span><span class="mu">agreement ${(s.agree*100).toFixed(0)}% ${s.dir}</span><span></span></div>`:'')}).join('');
+ // signals
+ drawMega();drawCorr();drawExtra();alertFx();$('sigc').textContent=D.alerts.length+' alerts';
+ if(D.alerts.length)$('sg').innerHTML=D.alerts.map(x=>`<div class="sig ${x.tone} ${open.has(x.id)?'open':''}" data-i="${x.id}"><b class="${x.tone==='up'?'up':x.tone==='down'?'dn':''}">${x.type}</b> <span class="mu">${T(x.t)}</span> <span class="num" style="float:right">${x.score==null?'':'score '+x.score+'/100'}</span><div class="d"><div>Met:</div><ul>${(x.met||[]).map(m=>`<li class="up">✓ ${esc(m)}</li>`).join('')||'<li>none</li>'}</ul><div>Missing:</div><ul>${(x.missing||[]).map(m=>`<li class="warn">✗ ${esc(m)}</li>`).join('')}</ul>${x.lead?`<div>Leading movers: ${x.lead.join(', ')}${x.news?' · recent matching news present':''}</div>`:''}<div>Invalidation: ${esc(x.invalid)}</div>${x.data?`<div>Data: ${esc(x.data)}</div>`:''}<div>Score is a transparent rule sum, not a probability.</div></div></div>`).join('');
+ $('sg').onclick=e=>{const s=e.target.closest('.sig');if(!s)return;const i=+s.dataset.i;open.has(i)?open.delete(i):open.add(i);s.classList.toggle('open')};
+ // news
+ const cats=[...new Set(D.news.map(n=>n.cat))];if($('nc').options.length-2!==cats.length){const v=$('nc').value;$('nc').innerHTML='<option value="">All</option><option value="__stmt">Statements (named speakers)</option>'+cats.map(c=>`<option>${c}</option>`).join('');$('nc').value=v}
+ let ns=D.news.filter(n=>(!$('nc').value||($('nc').value==='__stmt'?n.speaker:n.cat===$('nc').value))&&(!(nsel&&sel)||n.tickers.includes(sel)));
+ $('nh').textContent='NEWS & STATEMENTS'+(nsel&&sel?` · ${sel}`:'');
+ $('im').innerHTML=D.news.filter(n=>n.react).slice(0,25).map(n=>{const x=n.react,v=Math.abs(x.mean)>=0.001&&x.agree>=0.6?'tickers moved together':'no clear reaction yet';return`<div class="n"><span class="tk">${n.tickers.join(' ')}</span> <a href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.title)}</a><div class="mu">${esc(n.src)} · ${n.secondary?'secondary':'official'} · +${x.min}m: avg <span class="${cl(x.mean)} num">${p(x.mean,3)}</span>, ${(x.agree*100).toFixed(0)}% same direction → ${v}</div></div>`}).join('')||'<div class="n mu">No tracked items yet (only stories first detected while running are tracked).</div>';
+ $('nw').innerHTML=ns.length?ns.slice(0,80).map(n=>`<div class="n"><span class="tag">${n.cat}</span>${n.speaker?`<span class="tag" style="color:var(--a)">${esc(n.speaker)}</span>`:''}${n.tickers.slice(0,5).map(t=>`<span class="tk">${t}</span> `).join('')}<br><a href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.title)}</a><div class="mu">${esc(n.src)} · pub ${T(n.t)} · detected ${T(n.det)} · ${n.secondary?'secondary report (not the original post)':'official source'}</div></div>`).join(''):'<div class="n mu">No matching items.</div>';
+}
+function drawMega(){const m=D.analysis.mega,el=$('mg');if(!m){el.innerHTML='<div class="n mu">Waiting for first calculation…</div>';$('mgh').innerHTML='';return}
+ const cls=/^BULL/.test(m.state)?'up':/^BEAR/.test(m.state)?'dn':m.state==='DATA INSUFFICIENT'?'warn':'mu',hold=D.cfgMega.holdMs;
+ $('mgh').innerHTML=`<span class="${cls}" style="font-size:13px;font-weight:700">${m.state}</span>${m.weak?' <span class="warn">⚠ weakening</span>':''}${m.pending?` <span class="mu">→ ${m.pending} if held ${Math.max(0,Math.ceil((hold-(D.now-m.pendSince))/1000))}s</span>`:''} <span class="num mu">${m.state==='DATA INSUFFICIENT'?'':`score ${m.score}/100 · ${m.level||'—'}`}</span>`;
+ const nq=m.nq,q=v=>p(v,3),ic=l=>l==='ok'?'✓':l==='miss'?'✗':'•',lc=l=>l==='ok'?'up':l==='miss'?'warn':'mu';
+ const body=`<tr><td><b>NQ=F</b> <span class="mu">E-mini Nasdaq-100 futures</span></td><td class="mu">—</td><td class="num">${f(nq.price)}</td><td class="num ${cl(nq.pct)}">${p(nq.pct)}</td><td class="num ${cl(nq.r1)}">${q(nq.r1)}</td><td class="num ${cl(nq.r3)}">${q(nq.r3)}</td><td colspan="2" class="mu">Yahoo · delay unverified · ${nq.age==null?'n/a':Math.round(nq.age/1000)+'s old'}</td><td class="${nq.ok?'up':'warn'}">${nq.ok?'LIVE':'STALE/N/A'}</td></tr>`+m.rows.map(r=>`<tr class="r"><td><b>${r.sym}</b>${r.earn?' <span class="warn">⚑ earnings</span>':''} <span class="mu">${esc(r.name)}</span></td><td class="num mu">≈${r.weight??'—'}%</td><td class="num">${f(r.price)}</td><td class="num ${cl(r.pct)}">${p(r.pct)}</td><td class="num ${cl(r.r1)}">${q(r.r1)}</td><td class="num ${cl(r.r3)}">${q(r.r3)}</td><td class="num ${cl(r.contrib)}">${r.contrib==null?'—':(r.contrib*100).toFixed(3)+' pt'}</td><td class="num ${cl(r.rel)}">${p(r.rel)}</td><td class="${r.status==='live'?'':'warn'}">${r.status!=='live'?r.status.toUpperCase():r.confirms==null?'—':r.confirms?'✓ with NQ':'✗ vs NQ'}</td></tr>`).join('');
+ const ll=(m.leadlag||[]).map(x=>x.lag==null?`${x.sym}: no reliable lead/lag${x.r==null?' (needs ~30 min of data)':''}`:`${x.sym} ${x.lag>0?'leads':'lags'} NQ by ${Math.abs(x.lag)}m (r ${x.r.toFixed(2)}, n ${x.n})`).join(' · ');const b=m.brk,bc=/CONFIRMED/.test(b.stage)?(b.dir>0?'up':'dn'):/FAILING/.test(b.stage)?'warn':'';
+ const s=D.analysis.spcx,sxn=D.spacex||[];
+ const sx=`<div class="sub">SPACEX · SPCX · NASDAQ-LISTED SINCE 12 JUN 2026, NASDAQ-100 SINCE 7 JUL 2026 · SHOWN SEPARATELY, NOT IN THE ALIGNMENT GROUP</div><div class="n">${s?`<b>SPCX</b> <span class="num">${f(s.price)}</span> <span class="num ${cl(s.pct)}">${p(s.pct)}</span> · 1m <span class="num ${cl(s.r1)}">${q(s.r1)}</span> · 3m <span class="num ${cl(s.r3)}">${q(s.r3)}</span> · weight ≈${s.weight}% (unverified) → contrib ≈${(s.contrib*100).toFixed(3)} pt · <span class="${s.status==='live'?'up':'warn'}">${s.status.toUpperCase()}</span> <span class="mu">${Math.round(s.age/1000)}s old · Yahoo/Finnhub · short trading history</span>`:'<span class="warn">SPCX quote unavailable</span>'}</div>`+(sxn.length?sxn.map(n=>`<div class="n"><a href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.title)}</a><div class="mu">${esc(n.src)} · pub ${T(n.t)} · ${n.secondary?'secondary report':'official source'}</div></div>`).join(''):'<div class="n mu">No SpaceX headlines captured yet.</div>');
+ const hist=(D.mhist||[]).slice(0,8).map(x=>`<div class="n"><span class="mu num">${T(x.t)}</span> <span class="tag">${x.kind}</span> <b class="${/BULL/.test(x.to)||/UP/.test(x.to)?'up':/BEAR/.test(x.to)?'dn':''}">${esc(x.to)}</b> <span class="mu">${x.score==null?'':'score '+x.score+' · '}${esc(x.ev||'')}</span></div>`).join('')||'<div class="n mu">No signal changes yet.</div>';
+ $('mg').innerHTML=`<table><thead><tr><th style="cursor:default">Ticker</th><th style="cursor:default">Wt (cfg)</th><th style="cursor:default">Last</th><th style="cursor:default">Day%</th><th style="cursor:default">1m</th><th style="cursor:default">3m</th><th style="cursor:default">Contrib≈</th><th style="cursor:default">vs NQ</th><th style="cursor:default">NQ check</th></tr></thead><tbody>${body}</tbody></table>
+ <div class="sub">WHY THIS SIGNAL · fresh ${m.freshN}/${m.rows.length} · group contribution ≈ ${m.sumContrib==null?'—':(m.sumContrib*100).toFixed(3)+' index pts'} (approximate)</div><ul class="w">${m.lines.map(l=>`<li class="${lc(l[0])}">${ic(l[0])} ${esc(l[1])}</li>`).join('')}</ul>
+ <div class="sub">LEAD / LAG vs NQ · 1-min returns, 60 min</div><div class="n mu">${ll||'n/a'}</div><div class="sub">CONSOLIDATION → BREAKOUT</div><div class="n"><b class="${bc}">${b.stage==='NONE'?'No group compression detected':b.stage}</b> ${b.dir?`<span class="${b.dir>0?'up':'dn'}">${b.dir>0?'upside':'downside'}</span>`:''} <span class="mu">${Object.keys(b.ranges).length?'range-frozen: '+Object.keys(b.ranges).join(', '):'needs ≥60% of fresh mega-caps with 5m→1m range ≤0.15%'} · uses ~5s poll / trade ticks, not tick-accurate</span></div>
+ ${sx}<div class="sub">SIGNAL HISTORY</div>${hist}<div class="sub">Weights: ${esc(D.cfgMega.weightsSource)}. Volume confirmation unavailable on free feeds.</div>`;}
+function conn(){const es=new EventSource('/events'+location.search);es.onmessage=e=>{D=JSON.parse(e.data);draw()};es.onerror=()=>{$('fy').textContent='SERVER DISCONNECTED – retrying';$('fy').className='pill bad'};}
+const PN={mega:'Mega-cap drivers','p-watch':'Watchlist','p-corr':'Gold / oil / macro vs NQ','p-sync':'Synchronization','p-sig':'Market signals','p-imp':'News impact','p-news':'News & statements','p-cal':'Calendar & events','p-jour':'Signal journal'};
+const WS_=[3,4,6,8,9,12],HS_=[200,340,520,760];
+const DEF={mega:{v:1,w:8,h:616,o:1},'p-sig':{v:1,w:4,h:616,o:2},'p-watch':{v:1,w:8,h:536,o:3},'p-corr':{v:1,w:4,h:256,o:4},'p-sync':{v:1,w:4,h:256,o:5},'p-news':{v:1,w:6,h:424,o:6},'p-imp':{v:1,w:6,h:424,o:7},'p-cal':{v:1,w:4,h:296,o:8},'p-jour':{v:1,w:8,h:296,o:9}};
+let LY=JSON.parse(JSON.stringify(DEF));try{const x=JSON.parse(localStorage.ly2||'null');if(x)for(const k in x)if(LY[k])Object.assign(LY[k],x[k])}catch{}
+function saveLY(){try{localStorage.ly2=JSON.stringify(LY)}catch{}applyLY()}
+const rowsFor=x=>Math.ceil((x+8)/16);
+function reorder(all,id,tid){const oi=all.indexOf(id),ti=all.indexOf(tid),ids=all.filter(i=>i!==id);ids.splice(ids.indexOf(tid)+(oi<ti?1:0),0,id);return ids}
+const sorted=()=>Object.keys(PN).sort((a,b)=>LY[a].o-LY[b].o);
+function applyLY(){for(const id in PN){const e=$(id),c=LY[id];if(!e)continue;e.style.display=c.v?'':'none';e.style.gridColumn='span '+c.w;e.style.gridRow='span '+rowsFor(c.h);e.style.order=c.o;
+ if(!e.querySelector('.pc')){const b=document.createElement('span');b.className='pc';b.innerHTML='<a data-a="-">−</a><a data-a="+">+</a><a data-a="x">×</a>';
+  b.onclick=ev=>{const a=ev.target.dataset.a;if(!a)return;const d=LY[id];if(a==='x')d.v=0;else{const s=a==='+'?1:-1,wi=WS_.reduce((q,w,i)=>Math.abs(w-d.w)<Math.abs(WS_[q]-d.w)?i:q,0);d.w=WS_[Math.min(5,Math.max(0,wi+s))];d.h=Math.max(120,Math.round(d.h*(s>0?1.25:0.8)))}saveLY()};
+  const h2=e.querySelector('h2');h2.appendChild(b);
+  h2.onpointerdown=ev=>{if(ev.target.closest&&ev.target.closest('input,select,button,a,.pc'))return;const x0=ev.clientX,y0=ev.clientY;let on=false,tgt=null;
+   const clr=()=>document.querySelectorAll('section.over').forEach(s=>s.classList.remove('over'));
+   const mv=m=>{if(!on&&Math.hypot(m.clientX-x0,m.clientY-y0)<8)return;on=true;e.classList.add('drag');clr();const el=document.elementFromPoint(m.clientX,m.clientY),s=el&&el.closest('section');tgt=s&&s.id!==id&&PN[s.id]?s:null;if(tgt)tgt.classList.add('over')};
+   const up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);e.classList.remove('drag');clr();if(on&&tgt){reorder(sorted(),id,tgt.id).forEach((i,n)=>{LY[i].o=n+1});saveLY()}};
+   addEventListener('pointermove',mv);addEventListener('pointerup',up)};
+  const z=document.createElement('div');z.className='rz';z.title='drag to resize';e.appendChild(z);
+  z.onpointerdown=ev=>{ev.preventDefault();ev.stopPropagation();const d=LY[id],r=e.getBoundingClientRect(),colW=(document.querySelector('main').clientWidth-16-88)/12+8,x0=ev.clientX,y0=ev.clientY,w0=r.width,h0=r.height;
+   const mv=m=>{d.w=Math.max(2,Math.min(12,Math.round((w0+m.clientX-x0+8)/colW)));d.h=Math.max(120,Math.round(h0+m.clientY-y0));e.style.gridColumn='span '+d.w;e.style.gridRow='span '+rowsFor(d.h)};
+   const up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);saveLY()};addEventListener('pointermove',mv);addEventListener('pointerup',up)}}}
+ renderDlg()}
+function renderDlg(){const t=Object.keys(PN).sort((a,b)=>LY[a].o-LY[b].o).map(id=>{const c=LY[id];return`<tr><td><input type="checkbox" data-id="${id}" data-k="v" ${c.v?'checked':''}> ${PN[id]}</td><td><select data-id="${id}" data-k="w">${[...new Set([...WS_,c.w])].sort((a,b)=>a-b).map(w=>`<option value="${w}" ${w===c.w?'selected':''}>${Math.round(w/12*100)}% wide</option>`).join('')}</select></td><td><select data-id="${id}" data-k="h">${[...new Set([...HS_,c.h])].sort((a,b)=>a-b).map(h=>`<option value="${h}" ${h===c.h?'selected':''}>${h}px tall</option>`).join('')}</select></td><td><a data-id="${id}" data-mv="-1">▲</a> <a data-id="${id}" data-mv="1">▼</a></td></tr>`}).join('');
+ $('dlgb').innerHTML=`<b>Panels</b> <span class="mu">(also −/+/× on every panel header)</span><table style="margin:8px 0">${t}</table><div style="margin:6px 0">Weights % <input id="wi" size="38" placeholder="NVDA:7.7,GOOGL:6.4,MU:5.2"> <button id="wsv">Save</button></div><button id="lrs">Reset layout</button> <button id="lcl">Close</button><div class="mu" style="margin-top:8px">Tickers: type a symbol in the watchlist box and press Enter to add; × on a row removes it. Stored on the server (survives restarts only if its disk persists).</div>`}
+$('dlgb').onchange=e=>{const d=e.target.dataset;if(!d.id)return;LY[d.id][d.k]=d.k==='v'?+e.target.checked:+e.target.value;saveLY()};
+$('dlgb').onclick=e=>{const d=e.target.dataset;if(d.mv){const ids=Object.keys(PN).sort((a,b)=>LY[a].o-LY[b].o),i=ids.indexOf(d.id),j=i+ +d.mv;if(j>=0&&j<ids.length){[LY[ids[i]].o,LY[ids[j]].o]=[LY[ids[j]].o,LY[ids[i]].o];saveLY()}}else if(e.target.id==='lrs'){LY=JSON.parse(JSON.stringify(DEF));saveLY()}else if(e.target.id==='lcl')$('dlg').style.display='none';else if(e.target.id==='wsv'){const w={};String($('wi').value).split(/[ ,]+/).forEach(x=>{const[k,v]=x.split(':');if(k&&+v>0)w[k.toUpperCase()]=+v});fetch('/api/weights'+location.search,{method:'POST',body:JSON.stringify({weights:w})}).catch(()=>{})}};
+$('lb').onclick=()=>{$('dlg').style.display='block'};
+function wpost(b){fetch('/api/watch'+location.search,{method:'POST',body:JSON.stringify(b)}).catch(()=>{})}
+$('addt').onkeydown=e=>{if(e.key==='Enter'&&e.target.value.trim()){wpost({add:e.target.value.toUpperCase().split(/[ ,]+/).filter(Boolean)});e.target.value=''}};
+function drawCorr(){const mc=D.analysis.macro;if(!mc){$('cr').innerHTML='<div class="n mu">Waiting…</div>';return}
+ const cc=c=>!c||c.r==null?`<span class="mu">n/a${c?` (${c.n})`:''}</span>`:`<span class="num ${c.r>0.3?'up':c.r<-0.3?'dn':'mu'}">${c.r>=0?'+':''}${c.r.toFixed(2)}</span> <span class="mu">(${c.n})</span>`;
+ const th=['Instrument','Last','Day%','r 15m','r 30m','r 60m'].map(x=>`<th style="cursor:default">${x}</th>`).join('');
+ $('cr').innerHTML=`<table><thead><tr>${th}</tr></thead><tbody>${Object.entries(mc).map(([s,x])=>x.unavailable?`<tr><td><b>${esc(x.name)}</b></td><td colspan="5" class="warn">unavailable</td></tr>`:`<tr><td><b>${esc(x.name)}</b> <span class="mu">${s}</span></td><td class="num">${f(x.price)}</td><td class="num ${cl(x.pct)}">${p(x.pct)}</td><td>${cc(x.c[15])}</td><td>${cc(x.c[30])}</td><td>${cc(x.c[60])}</td></tr>`).join('')}</tbody></table><div class="n mu">Pearson r of 1-minute returns vs NQ=F (n = minutes used, needs 8+). Unstable and not causal. |r| under 0.3 means no clear relationship. Yahoo futures, delay unverified.</div>`}
+let bell=false;try{bell=localStorage.bell==='1'}catch{}
+const seen=new Set();let first=true;
+$('bell').textContent=bell?'🔔 on':'🔔 off';
+$('bell').onclick=()=>{bell=!bell;try{localStorage.bell=bell?'1':'0'}catch{}$('bell').textContent=bell?'🔔 on':'🔔 off';if(bell&&typeof Notification!=='undefined'&&Notification.permission==='default')Notification.requestPermission()};
+function alertFx(){for(const a of D.alerts){if(seen.has(a.id))continue;seen.add(a.id);if(first||!bell||(a.tone==='info'&&!/CONFIRMED|ALIGNMENT|FEED/.test(a.type)))continue;
+ try{const c=new AudioContext(),o=c.createOscillator();o.frequency.value=a.tone==='down'?330:660;o.connect(c.destination);o.start();setTimeout(()=>{o.stop();c.close()},180)}catch{}
+ try{if(Notification.permission==='granted')new Notification(a.type,{body:(a.met&&a.met[0])||''})}catch{}}first=false}
+function evpost(b){fetch('/api/events'+location.search,{method:'POST',body:JSON.stringify(b)}).catch(()=>{})}
+$('addev').onkeydown=e=>{if(e.key==='Enter'&&e.target.value.trim()){evpost({add:e.target.value.trim()});e.target.value=''}};
+$('cl').onclick=e=>{const i=e.target.dataset.ev;if(i!=null)evpost({remove:+i})};
+function drawExtra(){const j=D.journal||{stats:[],recent:[]},c=D.cal||[],th=a=>a.map(x=>`<th style="cursor:default">${x}</th>`).join('');
+ $('jr').innerHTML=(j.stats.length?`<table><thead><tr>${th(['Signal','n','avg NQ +5m*','hit% +5m'])}</tr></thead><tbody>${j.stats.map(s=>`<tr><td>${esc(s.type)}</td><td class="num">${s.n}</td><td class="num ${cl(s.avg5)}">${s.avg5==null?'—':p(s.avg5,3)}</td><td class="num">${s.hit==null?'—':(s.hit*100).toFixed(0)+'%'}</td></tr>`).join('')}</tbody></table>`:'<div class="n mu">No signals recorded yet.</div>')+j.recent.map(x=>`<div class="n"><span class="mu num">${T(x.t)}</span> <b>${esc(x.type)}</b> <span class="mu">NQ ${[1,5,15].map(m=>m+'m '+(x.r[m]==null?'…':p(x.r[m],3))).join(' · ')}</span></div>`).join('')+'<div class="n mu">*up-signals count as +, down-signals as −. Small samples prove nothing: judge after weeks of data. Stored on the server disk (resets if the host disk does).</div>';
+ $('cl').innerHTML=c.length?c.map(e=>`<div class="n"><span class="num ${e.soon?'warn':'mu'}">${new Date(e.t).toLocaleString('en-GB',{timeZone:'Europe/Skopje',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</span> ${esc(e.label)}${e.idx!=null?` <a class="x" data-ev="${e.idx}">×</a>`:''}</div>`).join(''):'<div class="n mu">No upcoming events.</div>'}
+applyLY();
+try{const s=JSON.parse(localStorage.q||'{}');if(s.sort)sort=s.sort;filt=s.filt||'';$('flt').value=filt}catch{}
+conn();
+</script></body></html>
